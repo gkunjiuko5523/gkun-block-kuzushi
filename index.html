@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>Gくんのブロック崩し 第1号</title><style>body{margin:0;background:#111;color:white;font-family:sans-serif;text-align:center}main{max-width:720px;margin:auto;padding:10px 12px 14px}canvas{width:100%;background:#050505;border:1px solid #666;border-radius:10px 10px 0 0;touch-action:none;display:block}button{padding:9px 16px;border:0;border-radius:9px;margin:8px}small{opacity:.75}</style></head><body><main><h2>Gくんのブロック崩し</h2><small>こうちゃん × Gくん　AIに作ってもらったゲーム 第1号・保存版</small><p>スコア <b id="s">0</b>　ライフ <b id="l">3</b>　<button id="go">スタート / リセット</button> <button id="pause">一時停止</button></p><canvas id="c" width="700" height="500"></canvas>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>Gくんのブロック崩し</title><meta property="og:title" content="Gくんのブロック崩し><meta property="og:description" content="こうちゃん × Gくん 制作ゲーム"><meta property="og:type" content="website"><style><style>body{margin:0;background:#111;color:white;font-family:sans-serif;text-align:center}main{max-width:720px;margin:auto;padding:10px 12px 14px}canvas{width:100%;background:#050505;border:1px solid #666;border-radius:10px 10px 0 0;touch-action:none;display:block}button{padding:9px 16px;border:0;border-radius:9px;margin:8px}small{opacity:.75}</style></head><body><main><h2>Gくんのブロック崩し</h2><small>こうちゃん × Gくん　AIに作ってもらったゲーム 第1号・保存版</small><p>スコア <b id="s">0</b>　ライフ <b id="l">3</b>　<button id="go">スタート / リセット</button> <button id="pause">一時停止</button></p><canvas id="c" width="700" height="500"></canvas>
 <div id="touchpad" style="height:90px;border:1px solid #666;border-top:0;border-radius:0 0 10px 10px;background:#181818;touch-action:none;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:14px">ここを左右になぞってパドル操作</div>
 <p style="margin:8px 0 0"><small>PC：マウス・← → キー　スマホ：下の操作エリアを左右になぞる</small></p></main><script>
 const c=document.querySelector('#c'),x=c.getContext('2d'),S=document.querySelector('#s'),L=document.querySelector('#l');let p,b,bs,score,lives,on,id,waiting,paused;
@@ -17,7 +17,7 @@ c.addEventListener('touchstart',e=>{if(waiting){e.preventDefault();waiting=false
 const tp=document.querySelector('#touchpad');
 function touchMove(e){
   e.preventDefault();
-  const t=e.touches[0], r=tp.getBoundingClientRect();
+  const t=e.touches[0], r=tp.getBoundingClientRect();S
   const ratio=Math.max(0,Math.min(1,(t.clientX-r.left)/r.width));
   p.x=ratio*(700-p.w);
   if(!on)draw(waiting?'クリック / タッチで再開':'スタートを押してね');
