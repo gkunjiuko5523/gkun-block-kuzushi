@@ -10,6 +10,8 @@
 <meta property="og:type" content="website">
 
 <style>
+*{box-sizing:border-box}
+
 body{
   margin:0;
   background:radial-gradient(circle at top,#202738,#090b10 65%);
@@ -20,51 +22,149 @@ body{
 }
 
 main{
-  max-width:720px;
+  width:min(96vw,960px);
   margin:auto;
-  padding:10px 12px 14px;
+  padding:6px 10px 10px;
 }
 
 h2{
-  margin-bottom:4px;
+  margin:2px 0 1px;
+  font-size:26px;
+  line-height:1.15;
   letter-spacing:2px;
   text-shadow:0 0 12px #4d96ff;
 }
 
+.credit{
+  display:block;
+  margin-bottom:3px;
+  opacity:.75;
+  font-size:12px;
+}
+
+.topbar{
+  margin:3px 0 5px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.status{
+  white-space:nowrap;
+}
+
+.buttons{
+  display:flex;
+  gap:5px;
+  justify-content:center;
+}
+
+button{
+  padding:8px 12px;
+  border:0;
+  border-radius:8px;
+  cursor:pointer;
+  white-space:nowrap;
+  font-size:14px;
+}
+
+#gamewrap{
+  width:100%;
+  margin:auto;
+}
+
 canvas{
   width:100%;
+  height:auto;
+  aspect-ratio:700/560;
   background:linear-gradient(#070b14,#020204);
   border:1px solid #778;
-  border-radius:10px 10px 0 0;
+  border-radius:10px;
   box-shadow:0 0 20px rgba(77,150,255,.18);
   touch-action:none;
   display:block;
 }
 
-button{
-  padding:9px 16px;
-  border:0;
-  border-radius:9px;
-  margin:8px 4px;
-  cursor:pointer;
-}
-
-small{
-  opacity:.75;
-}
-
 #touchpad{
-  height:90px;
-  border:1px solid #666;
-  border-top:0;
-  border-radius:0 0 10px 10px;
-  background:linear-gradient(#181818,#101010);
-  touch-action:none;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#aaa;
-  font-size:14px;
+  display:none;
+}
+
+.help{
+  margin:5px 0 0;
+  font-size:12px;
+  opacity:.7;
+}
+
+/* スマホ */
+@media (max-width:700px){
+
+  main{
+    width:100%;
+    padding:3px 6px 6px;
+  }
+
+  h2{
+    font-size:21px;
+    margin:1px 0 0;
+  }
+
+  .credit{
+    font-size:11px;
+    margin-bottom:2px;
+  }
+
+  .topbar{
+    display:block;
+    margin:2px 0 4px;
+  }
+
+  .status{
+    font-size:14px;
+    margin-bottom:3px;
+  }
+
+  .buttons{
+    width:100%;
+    gap:3px;
+  }
+
+  button{
+    flex:1;
+    padding:7px 2px;
+    font-size:11px;
+    margin:0;
+  }
+
+  canvas{
+    aspect-ratio:auto;
+    height:min(64vh,680px);
+    border-radius:8px 8px 0 0;
+  }
+
+  #touchpad{
+    height:76px;
+    border:1px solid #666;
+    border-top:0;
+    border-radius:0 0 8px 8px;
+    background:linear-gradient(#181818,#101010);
+    touch-action:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#aaa;
+    font-size:13px;
+  }
+
+  .help{
+    margin-top:3px;
+    font-size:11px;
+  }
+
+  .pcHelp{
+    display:none;
+  }
 }
 </style>
 </head>
@@ -73,27 +173,32 @@ small{
 <main>
 
 <h2>Gブロック</h2>
-<small>こうちゃん × Gくん 制作ゲーム</small>
+<span class="credit">こうちゃん × Gくん 制作ゲーム</span>
 
-<p>
-スコア <b id="s">0</b>　
-ライフ <b id="l">3</b>　
-<button id="go">スタート / リセット</button>
-<button id="pause">一時停止</button>
-<button id="sound">🔊 音ON</button>
-</p>
+<div class="topbar">
+  <div class="status">
+    スコア <b id="s">0</b>　
+    ライフ <b id="l">3</b>
+  </div>
 
-<canvas id="c" width="700" height="500"></canvas>
-
-<div id="touchpad">
-ここを左右になぞってパドル操作
+  <div class="buttons">
+    <button id="go">スタート / リセット</button>
+    <button id="pause">一時停止</button>
+    <button id="sound">🔊 音ON</button>
+  </div>
 </div>
 
-<p style="margin:8px 0 0">
-<small>
-PC：マウス・← → キー　スマホ：下の操作エリアを左右になぞる<br>
-ゲーム画面クリック / タップ：PAUSE・再開
-</small>
+<div id="gamewrap">
+  <canvas id="c" width="700" height="700"></canvas>
+
+  <div id="touchpad">
+    ここを左右になぞってパドル操作
+  </div>
+</div>
+
+<p class="help">
+  <span class="pcHelp">PC：マウス・← → キー　</span>
+  ゲーム画面クリック / タップ：PAUSE・再開
 </p>
 
 </main>
@@ -106,74 +211,119 @@ const L=document.querySelector('#l');
 const pauseBtn=document.querySelector('#pause');
 const soundBtn=document.querySelector('#sound');
 const tp=document.querySelector('#touchpad');
+const gamewrap=document.querySelector('#gamewrap');
+
+const W=700;
+const H=700;
 
 let p,b,bs,score,lives,on,id,waiting,paused;
 let soundOn=true;
 let audioCtx=null;
 let flash=null;
 
-/* ---------- 電子音 ---------- */
+/* ---------- 音 ---------- */
 
-function audio(){
-  if(!audioCtx){
+function makeAudio(){
+  if(!soundOn)return null;
+
+  if(!audioCtx || audioCtx.state==='closed'){
     audioCtx=new (window.AudioContext||window.webkitAudioContext)();
   }
-  if(audioCtx.state==='suspended') audioCtx.resume();
+
+  if(audioCtx.state==='suspended'){
+    audioCtx.resume().catch(()=>{});
+  }
+
   return audioCtx;
 }
 
-function beep(freq,duration,type='square',volume=.035,endFreq=null){
+function wakeAudio(){
   if(!soundOn)return;
 
-  const a=audio();
-  const o=a.createOscillator();
-  const g=a.createGain();
+  try{
+    const a=makeAudio();
+    if(a && a.state==='suspended'){
+      a.resume().catch(()=>{});
+    }
+  }catch(e){}
+}
 
-  o.type=type;
-  o.frequency.setValueAtTime(freq,a.currentTime);
+function beep(freq,duration,type='square',volume=.07,endFreq=null){
+  if(!soundOn)return;
 
-  if(endFreq){
-    o.frequency.exponentialRampToValueAtTime(
-      endFreq,
-      a.currentTime+duration
-    );
+  const a=makeAudio();
+  if(!a)return;
+
+  const play=()=>{
+    try{
+      const o=a.createOscillator();
+      const g=a.createGain();
+
+      o.type=type;
+      o.frequency.setValueAtTime(freq,a.currentTime);
+
+      if(endFreq){
+        o.frequency.exponentialRampToValueAtTime(
+          endFreq,
+          a.currentTime+duration
+        );
+      }
+
+      g.gain.setValueAtTime(volume,a.currentTime);
+      g.gain.exponentialRampToValueAtTime(
+        .0001,
+        a.currentTime+duration
+      );
+
+      o.connect(g);
+      g.connect(a.destination);
+
+      o.start();
+      o.stop(a.currentTime+duration);
+    }catch(e){}
+  };
+
+  if(a.state==='suspended'){
+    a.resume().then(play).catch(()=>{});
+  }else{
+    play();
   }
-
-  g.gain.setValueAtTime(volume,a.currentTime);
-  g.gain.exponentialRampToValueAtTime(
-    .0001,
-    a.currentTime+duration
-  );
-
-  o.connect(g);
-  g.connect(a.destination);
-
-  o.start();
-  o.stop(a.currentTime+duration);
 }
 
 function wallSound(){
-  beep(180,.025,'square',.012);
+  beep(180,.025,'square',.035);
 }
 
 function paddleSound(){
-  beep(420,.045,'square',.025);
+  beep(420,.045,'square',.07);
 }
 
 function brickSound(){
-  beep(720,.055,'square',.025);
+  beep(720,.055,'square',.075);
 }
 
 function missSound(){
-  beep(190,.28,'sawtooth',.025,75);
+  beep(190,.28,'sawtooth',.06,75);
 }
 
 function clearSound(){
   if(!soundOn)return;
-  beep(523,.10,'square',.025);
-  setTimeout(()=>beep(659,.10,'square',.025),110);
-  setTimeout(()=>beep(784,.18,'square',.025),220);
+
+  beep(523,.10,'square',.07);
+  setTimeout(()=>beep(659,.10,'square',.07),110);
+  setTimeout(()=>beep(784,.18,'square',.07),220);
 }
+
+/* 自動スリープ等からの復帰対策 */
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden){
+    wakeAudio();
+  }
+});
+
+window.addEventListener('pageshow',()=>{
+  wakeAudio();
+});
 
 /* ---------- 初期化 ---------- */
 
@@ -189,14 +339,14 @@ function init(){
 
   p={
     x:292,
-    y:465,
+    y:H-35,
     w:116,
     h:14
   };
 
   b={
     x:350,
-    y:440,
+    y:H-60,
     r:8,
     vx:4,
     vy:-4
@@ -218,6 +368,7 @@ function init(){
   }
 
   pauseBtn.textContent='一時停止';
+
   sync();
   draw('スタートを押してね');
 }
@@ -230,13 +381,13 @@ function sync(){
 /* ---------- 描画 ---------- */
 
 function draw(msg=''){
-  x.clearRect(0,0,700,500);
+  x.clearRect(0,0,W,H);
 
-  /* 背景の薄い星 */
   x.fillStyle='rgba(255,255,255,.035)';
-  for(let i=0;i<35;i++){
-    const sx=(i*137)%700;
-    const sy=(i*83)%430;
+
+  for(let i=0;i<48;i++){
+    const sx=(i*137)%W;
+    const sy=(i*83)%(H-70);
     x.fillRect(sx,sy,2,2);
   }
 
@@ -248,7 +399,6 @@ function draw(msg=''){
     ['#70a1ff','#3867d6']
   ];
 
-  /* ブロック */
   for(const z of bs){
     if(!z.a)continue;
 
@@ -273,20 +423,23 @@ function draw(msg=''){
     x.fillRect(z.x+4,z.y+3,z.w-8,3);
   }
 
-  /* ブロック破壊時の光 */
   if(flash){
     x.beginPath();
     x.arc(flash.x,flash.y,flash.r,0,Math.PI*2);
-    x.fillStyle=`rgba(255,255,255,${flash.alpha})`;
+
+    x.fillStyle=
+      `rgba(255,255,255,${flash.alpha})`;
+
     x.fill();
 
     flash.r+=3;
     flash.alpha-=.12;
 
-    if(flash.alpha<=0)flash=null;
+    if(flash.alpha<=0){
+      flash=null;
+    }
   }
 
-  /* パドル */
   const pg=x.createLinearGradient(
     p.x,p.y,p.x,p.y+p.h
   );
@@ -305,7 +458,6 @@ function draw(msg=''){
 
   x.shadowBlur=0;
 
-  /* ボール */
   const bg=x.createRadialGradient(
     b.x-3,b.y-3,1,
     b.x,b.y,b.r+3
@@ -325,17 +477,19 @@ function draw(msg=''){
 
   x.shadowBlur=0;
 
-  /* メッセージ */
   if(msg){
     x.fillStyle='rgba(0,0,0,.60)';
-    x.fillRect(0,205,700,90);
+    x.fillRect(0,H/2-45,W,90);
 
     x.fillStyle='white';
     x.font='bold 30px sans-serif';
     x.textAlign='center';
+
     x.shadowColor='#4d96ff';
     x.shadowBlur=12;
-    x.fillText(msg,350,260);
+
+    x.fillText(msg,W/2,H/2+10);
+
     x.shadowBlur=0;
   }
 }
@@ -348,28 +502,25 @@ function loop(){
   b.x+=b.vx;
   b.y+=b.vy;
 
-  /* 左右の壁 */
-  if(b.x<8){
-    b.x=8;
+  if(b.x<b.r){
+    b.x=b.r;
     b.vx=Math.abs(b.vx);
     wallSound();
   }
 
-  if(b.x>692){
-    b.x=692;
+  if(b.x>W-b.r){
+    b.x=W-b.r;
     b.vx=-Math.abs(b.vx);
     wallSound();
   }
 
-  /* 上の壁 */
-  if(b.y<8){
-    b.y=8;
+  if(b.y<b.r){
+    b.y=b.r;
     b.vy=Math.abs(b.vy);
     wallSound();
   }
 
-  /* ミス */
-  if(b.y>508){
+  if(b.y>H+8){
     missSound();
 
     if(--lives<=0){
@@ -380,8 +531,8 @@ function loop(){
       return;
     }
 
-    b.x=350;
-    b.y=440;
+    b.x=W/2;
+    b.y=H-60;
     b.vx=4*(Math.random()<.5?-1:1);
     b.vy=-4;
 
@@ -394,33 +545,34 @@ function loop(){
     return;
   }
 
-  /* パドル */
   if(
     b.vy>0 &&
-    b.y+8>=p.y &&
-    b.y<=p.y+14 &&
+    b.y+b.r>=p.y &&
+    b.y-b.r<=p.y+p.h &&
     b.x>=p.x &&
     b.x<=p.x+p.w
   ){
-    let h=(b.x-(p.x+p.w/2))/(p.w/2);
+    const h=
+      (b.x-(p.x+p.w/2))/(p.w/2);
 
     b.vx=5*h;
+
     b.vy=-Math.sqrt(
       Math.max(4,32-b.vx*b.vx)
     );
 
-    b.y=p.y-9;
+    b.y=p.y-b.r-1;
+
     paddleSound();
   }
 
-  /* ブロック */
   for(const z of bs){
     if(
       z.a &&
-      b.x+8>z.x &&
-      b.x-8<z.x+z.w &&
-      b.y+8>z.y &&
-      b.y-8<z.y+z.h
+      b.x+b.r>z.x &&
+      b.x-b.r<z.x+z.w &&
+      b.y+b.r>z.y &&
+      b.y-b.r<z.y+z.h
     ){
       z.a=0;
       b.vy*=-1;
@@ -440,7 +592,6 @@ function loop(){
     }
   }
 
-  /* クリア */
   if(bs.every(z=>!z.a)){
     on=false;
     clearSound();
@@ -453,36 +604,59 @@ function loop(){
   id=requestAnimationFrame(loop);
 }
 
-/* ---------- パドル移動 ---------- */
+/* ---------- パドル ---------- */
 
-function mv(cx){
-  let r=c.getBoundingClientRect();
-  let v=(cx-r.left)*700/r.width;
+function movePaddleFromClientX(clientX){
+  const r=c.getBoundingClientRect();
+
+  const v=
+    (clientX-r.left)*W/r.width;
 
   p.x=Math.max(
     0,
-    Math.min(584,v-58)
+    Math.min(W-p.w,v-p.w/2)
   );
 }
 
-c.onmousemove=e=>mv(e.clientX);
+/*
+ PCではCanvasの外にマウスが出ても
+ ページ上の横位置からパドルを動かす。
+*/
+document.addEventListener('mousemove',e=>{
+  if(window.matchMedia('(pointer:fine)').matches){
+    movePaddleFromClientX(e.clientX);
+  }
+});
 
 /* ---------- PAUSE ---------- */
 
+function resumeWaiting(){
+  if(!waiting)return false;
+
+  wakeAudio();
+
+  waiting=false;
+  paused=false;
+  on=true;
+
+  pauseBtn.textContent='一時停止';
+
+  loop();
+
+  return true;
+}
+
 function togglePause(){
 
-  /* ミス後の待機中 */
-  if(waiting){
-    waiting=false;
-    paused=false;
-    on=true;
-    pauseBtn.textContent='一時停止';
-    loop();
+  wakeAudio();
+
+  if(resumeWaiting()){
     return;
   }
 
-  /* ゲーム開始前・ゲーム終了後 */
-  if(!on && !paused)return;
+  if(!on && !paused){
+    return;
+  }
 
   if(on){
     paused=true;
@@ -491,6 +665,7 @@ function togglePause(){
     cancelAnimationFrame(id);
 
     pauseBtn.textContent='再開';
+
     draw('PAUSE');
 
   }else if(paused){
@@ -499,16 +674,19 @@ function togglePause(){
     on=true;
 
     pauseBtn.textContent='一時停止';
+
+    wakeAudio();
+
     loop();
   }
 }
 
-/* PC：ゲーム画面クリック */
+/* PCクリック */
 c.addEventListener('click',()=>{
   togglePause();
 });
 
-/* iPhone：ゲーム画面タップ */
+/* スマホタップ */
 c.addEventListener(
   'touchstart',
   e=>{
@@ -518,12 +696,15 @@ c.addEventListener(
   {passive:false}
 );
 
-/* ---------- スマホ操作エリア ---------- */
+/* ---------- スマホ操作 ---------- */
 
 function touchMove(e){
   e.preventDefault();
 
   const t=e.touches[0];
+
+  if(!t)return;
+
   const r=tp.getBoundingClientRect();
 
   const ratio=Math.max(
@@ -534,7 +715,7 @@ function touchMove(e){
     )
   );
 
-  p.x=ratio*(700-p.w);
+  p.x=ratio*(W-p.w);
 
   if(!on){
     if(paused){
@@ -550,10 +731,10 @@ function touchMove(e){
 tp.addEventListener(
   'touchstart',
   e=>{
+    wakeAudio();
+
     if(waiting){
-      waiting=false;
-      on=true;
-      loop();
+      resumeWaiting();
     }
 
     touchMove(e);
@@ -569,27 +750,27 @@ tp.addEventListener(
 
 /* ---------- キーボード ---------- */
 
-document.onkeydown=e=>{
+document.addEventListener('keydown',e=>{
 
   if(e.key==='ArrowLeft'){
     p.x=Math.max(0,p.x-30);
   }
 
   if(e.key==='ArrowRight'){
-    p.x=Math.min(584,p.x+30);
+    p.x=Math.min(W-p.w,p.x+30);
   }
-};
+});
 
 /* ---------- ボタン ---------- */
 
 document.querySelector('#go').onclick=()=>{
 
-  /* iPhone等で音を許可するため */
-  if(soundOn)audio();
+  wakeAudio();
 
   init();
 
   on=true;
+
   loop();
 };
 
@@ -602,11 +783,16 @@ soundBtn.onclick=()=>{
   soundOn=!soundOn;
 
   soundBtn.textContent=
-    soundOn ? '🔊 音ON' : '🔇 音OFF';
+    soundOn
+      ? '🔊 音ON'
+      : '🔇 音OFF';
 
   if(soundOn){
-    audio();
-    beep(520,.06,'square',.025);
+    wakeAudio();
+
+    setTimeout(()=>{
+      beep(520,.07,'square',.07);
+    },20);
   }
 };
 
