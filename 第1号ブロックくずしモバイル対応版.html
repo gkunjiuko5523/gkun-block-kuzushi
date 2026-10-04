@@ -1,0 +1,45 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>Gくんのブロック崩し 第1号</title><style>body{margin:0;background:#111;color:white;font-family:sans-serif;text-align:center}main{max-width:720px;margin:auto;padding:10px 12px 14px}canvas{width:100%;background:#050505;border:1px solid #666;border-radius:10px 10px 0 0;touch-action:none;display:block}button{padding:9px 16px;border:0;border-radius:9px;margin:8px}small{opacity:.75}</style></head><body><main><h2>Gくんのブロック崩し</h2><small>こうちゃん × Gくん　AIに作ってもらったゲーム 第1号・保存版</small><p>スコア <b id="s">0</b>　ライフ <b id="l">3</b>　<button id="go">スタート / リセット</button> <button id="pause">一時停止</button></p><canvas id="c" width="700" height="500"></canvas>
+<div id="touchpad" style="height:90px;border:1px solid #666;border-top:0;border-radius:0 0 10px 10px;background:#181818;touch-action:none;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:14px">ここを左右になぞってパドル操作</div>
+<p style="margin:8px 0 0"><small>PC：マウス・← → キー　スマホ：下の操作エリアを左右になぞる</small></p></main><script>
+const c=document.querySelector('#c'),x=c.getContext('2d'),S=document.querySelector('#s'),L=document.querySelector('#l');let p,b,bs,score,lives,on,id,waiting,paused;
+function init(){cancelAnimationFrame(id);score=0;lives=3;on=false;waiting=false;paused=false;p={x:292,y:465,w:116,h:14};b={x:350,y:440,r:8,vx:4,vy:-4};bs=[];for(let r=0;r<5;r++)for(let q=0;q<8;q++)bs.push({x:28+q*81,y:55+r*30,w:74,h:22,a:1,r});sync();draw('スタートを押してね')}
+function sync(){S.textContent=score;L.textContent=lives}
+function draw(msg=''){x.clearRect(0,0,700,500);let cs=['#ff5c5c','#ff9f43','#ffd93d','#6bcb77','#4d96ff'];for(const z of bs)if(z.a){x.fillStyle=cs[z.r];x.fillRect(z.x,z.y,z.w,z.h)}x.fillStyle='#eee';x.fillRect(p.x,p.y,p.w,p.h);x.beginPath();x.arc(b.x,b.y,b.r,0,7);x.fillStyle='#fff';x.fill();if(msg){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(0,210,700,80);x.fillStyle='white';x.font='bold 28px sans-serif';x.textAlign='center';x.fillText(msg,350,260)}}
+function loop(){if(!on)return;b.x+=b.vx;b.y+=b.vy;if(b.x<8||b.x>692)b.vx*=-1;if(b.y<8)b.vy=Math.abs(b.vy);if(b.y>508){
+  if(--lives<=0){sync();on=false;waiting=false;draw('ゲームオーバー');return}
+  b.x=350;b.y=440;b.vx=4*(Math.random()<.5?-1:1);b.vy=-4;
+  sync();on=false;waiting=true;draw('クリック / タッチで再開');return
+}if(b.vy>0&&b.y+8>=p.y&&b.y<=p.y+14&&b.x>=p.x&&b.x<=p.x+p.w){let h=(b.x-(p.x+p.w/2))/(p.w/2);b.vx=5*h;b.vy=-Math.sqrt(Math.max(4,32-b.vx*b.vx));b.y=p.y-9}for(const z of bs)if(z.a&&b.x+8>z.x&&b.x-8<z.x+z.w&&b.y+8>z.y&&b.y-8<z.y+z.h){z.a=0;b.vy*=-1;score+=10;sync();break}if(bs.every(z=>!z.a)){on=false;draw('クリア！');return}draw();id=requestAnimationFrame(loop)}
+function mv(cx){let r=c.getBoundingClientRect(),v=(cx-r.left)*700/r.width;p.x=Math.max(0,Math.min(584,v-58))}
+c.onmousemove=e=>mv(e.clientX);
+c.addEventListener('click',()=>{if(waiting){waiting=false;on=true;loop()}});
+c.addEventListener('touchstart',e=>{if(waiting){e.preventDefault();waiting=false;on=true;loop()}},{passive:false});
+const tp=document.querySelector('#touchpad');
+function touchMove(e){
+  e.preventDefault();
+  const t=e.touches[0], r=tp.getBoundingClientRect();
+  const ratio=Math.max(0,Math.min(1,(t.clientX-r.left)/r.width));
+  p.x=ratio*(700-p.w);
+  if(!on)draw(waiting?'クリック / タッチで再開':'スタートを押してね');
+}
+tp.addEventListener('touchstart',e=>{
+  if(waiting){waiting=false;on=true;loop()}
+  touchMove(e);
+},{passive:false});
+tp.addEventListener('touchmove',touchMove,{passive:false});document.onkeydown=e=>{if(e.key==='ArrowLeft')p.x=Math.max(0,p.x-30);if(e.key==='ArrowRight')p.x=Math.min(584,p.x+30)};document.querySelector('#go').onclick=()=>{
+  init();paused=false;document.querySelector('#pause').textContent='一時停止';on=true;loop()
+};
+document.querySelector('#pause').onclick=()=>{
+  if(waiting || lives<=0) return;
+  if(!paused && on){
+    paused=true;on=false;cancelAnimationFrame(id);
+    document.querySelector('#pause').textContent='再開';
+    draw('一時停止中');
+  } else if(paused){
+    paused=false;on=true;
+    document.querySelector('#pause').textContent='一時停止';
+    loop();
+  }
+};
+init();
+</script></body></html>
