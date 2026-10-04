@@ -1,48 +1,617 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>Gブロック</title>
-  <meta property="og:title" content="Gブロック">
-    <meta property="og:description" content="こうちゃん × Gくん 制作ゲーム">
-  <meta property="og:type" content="website"><style>body{margin:0;background:#111;color:white;font-family:sans-serif;text-align:center}main{max-width:720px;margin:auto;padding:10px 12px 14px}canvas{width:100%;background:#050505;border:1px solid #666;border-radius:10px 10px 0 0;touch-action:none;display:block}button{padding:9px 16px;border:0;border-radius:9px;margin:8px}small{opacity:.75}</style></head><body><main><h2>Gブロック</h2><small>こうちゃん × Gくん 制作ゲーム</small><p>スコア <b id="s">0</b>　ライフ <b id="l">3</b>　<button id="go">スタート / リセット</button> <button id="pause">一時停止</button></p><canvas id="c" width="700" height="500"></canvas>
-<div id="touchpad" style="height:90px;border:1px solid #666;border-top:0;border-radius:0 0 10px 10px;background:#181818;touch-action:none;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:14px">ここを左右になぞってパドル操作</div>
-<p style="margin:8px 0 0"><small>PC：マウス・← → キー　スマホ：下の操作エリアを左右になぞる</small></p></main><script>
-const c=document.querySelector('#c'),x=c.getContext('2d'),S=document.querySelector('#s'),L=document.querySelector('#l');let p,b,bs,score,lives,on,id,waiting,paused;
-function init(){cancelAnimationFrame(id);score=0;lives=3;on=false;waiting=false;paused=false;p={x:292,y:465,w:116,h:14};b={x:350,y:440,r:8,vx:4,vy:-4};bs=[];for(let r=0;r<5;r++)for(let q=0;q<8;q++)bs.push({x:28+q*81,y:55+r*30,w:74,h:22,a:1,r});sync();draw('スタートを押してね')}
-function sync(){S.textContent=score;L.textContent=lives}
-function draw(msg=''){x.clearRect(0,0,700,500);let cs=['#ff5c5c','#ff9f43','#ffd93d','#6bcb77','#4d96ff'];for(const z of bs)if(z.a){x.fillStyle=cs[z.r];x.fillRect(z.x,z.y,z.w,z.h)}x.fillStyle='#eee';x.fillRect(p.x,p.y,p.w,p.h);x.beginPath();x.arc(b.x,b.y,b.r,0,7);x.fillStyle='#fff';x.fill();if(msg){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(0,210,700,80);x.fillStyle='white';x.font='bold 28px sans-serif';x.textAlign='center';x.fillText(msg,350,260)}}
-function loop(){if(!on)return;b.x+=b.vx;b.y+=b.vy;if(b.x<8||b.x>692)b.vx*=-1;if(b.y<8)b.vy=Math.abs(b.vy);if(b.y>508){
-  if(--lives<=0){sync();on=false;waiting=false;draw('ゲームオーバー');return}
-  b.x=350;b.y=440;b.vx=4*(Math.random()<.5?-1:1);b.vy=-4;
-  sync();on=false;waiting=true;draw('クリック / タッチで再開');return
-}if(b.vy>0&&b.y+8>=p.y&&b.y<=p.y+14&&b.x>=p.x&&b.x<=p.x+p.w){let h=(b.x-(p.x+p.w/2))/(p.w/2);b.vx=5*h;b.vy=-Math.sqrt(Math.max(4,32-b.vx*b.vx));b.y=p.y-9}for(const z of bs)if(z.a&&b.x+8>z.x&&b.x-8<z.x+z.w&&b.y+8>z.y&&b.y-8<z.y+z.h){z.a=0;b.vy*=-1;score+=10;sync();break}if(bs.every(z=>!z.a)){on=false;draw('クリア！');return}draw();id=requestAnimationFrame(loop)}
-function mv(cx){let r=c.getBoundingClientRect(),v=(cx-r.left)*700/r.width;p.x=Math.max(0,Math.min(584,v-58))}
-c.onmousemove=e=>mv(e.clientX);
-c.addEventListener('click',()=>{if(waiting){waiting=false;on=true;loop()}});
-c.addEventListener('touchstart',e=>{if(waiting){e.preventDefault();waiting=false;on=true;loop()}},{passive:false});
-const tp=document.querySelector('#touchpad');
-function touchMove(e){
-  e.preventDefault();
-  const t=e.touches[0], r=tp.getBoundingClientRect();S
-  const ratio=Math.max(0,Math.min(1,(t.clientX-r.left)/r.width));
-  p.x=ratio*(700-p.w);
-  if(!on)draw(waiting?'クリック / タッチで再開':'スタートを押してね');
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+
+<title>Gブロック</title>
+<meta property="og:title" content="Gブロック">
+<meta property="og:description" content="こうちゃん × Gくん 制作ゲーム">
+<meta property="og:type" content="website">
+
+<style>
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#202738,#090b10 65%);
+  color:white;
+  font-family:sans-serif;
+  text-align:center;
+  min-height:100vh;
 }
-tp.addEventListener('touchstart',e=>{
-  if(waiting){waiting=false;on=true;loop()}
-  touchMove(e);
-},{passive:false});
-tp.addEventListener('touchmove',touchMove,{passive:false});document.onkeydown=e=>{if(e.key==='ArrowLeft')p.x=Math.max(0,p.x-30);if(e.key==='ArrowRight')p.x=Math.min(584,p.x+30)};document.querySelector('#go').onclick=()=>{
-  init();paused=false;document.querySelector('#pause').textContent='一時停止';on=true;loop()
-};
-document.querySelector('#pause').onclick=()=>{
-  if(waiting || lives<=0) return;
-  if(!paused && on){
-    paused=true;on=false;cancelAnimationFrame(id);
-    document.querySelector('#pause').textContent='再開';
-    draw('一時停止中');
-  } else if(paused){
-    paused=false;on=true;
-    document.querySelector('#pause').textContent='一時停止';
+
+main{
+  max-width:720px;
+  margin:auto;
+  padding:10px 12px 14px;
+}
+
+h2{
+  margin-bottom:4px;
+  letter-spacing:2px;
+  text-shadow:0 0 12px #4d96ff;
+}
+
+canvas{
+  width:100%;
+  background:linear-gradient(#070b14,#020204);
+  border:1px solid #778;
+  border-radius:10px 10px 0 0;
+  box-shadow:0 0 20px rgba(77,150,255,.18);
+  touch-action:none;
+  display:block;
+}
+
+button{
+  padding:9px 16px;
+  border:0;
+  border-radius:9px;
+  margin:8px 4px;
+  cursor:pointer;
+}
+
+small{
+  opacity:.75;
+}
+
+#touchpad{
+  height:90px;
+  border:1px solid #666;
+  border-top:0;
+  border-radius:0 0 10px 10px;
+  background:linear-gradient(#181818,#101010);
+  touch-action:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#aaa;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+<main>
+
+<h2>Gブロック</h2>
+<small>こうちゃん × Gくん 制作ゲーム</small>
+
+<p>
+スコア <b id="s">0</b>　
+ライフ <b id="l">3</b>　
+<button id="go">スタート / リセット</button>
+<button id="pause">一時停止</button>
+<button id="sound">🔊 音ON</button>
+</p>
+
+<canvas id="c" width="700" height="500"></canvas>
+
+<div id="touchpad">
+ここを左右になぞってパドル操作
+</div>
+
+<p style="margin:8px 0 0">
+<small>
+PC：マウス・← → キー　スマホ：下の操作エリアを左右になぞる<br>
+ゲーム画面クリック / タップ：PAUSE・再開
+</small>
+</p>
+
+</main>
+
+<script>
+const c=document.querySelector('#c');
+const x=c.getContext('2d');
+const S=document.querySelector('#s');
+const L=document.querySelector('#l');
+const pauseBtn=document.querySelector('#pause');
+const soundBtn=document.querySelector('#sound');
+const tp=document.querySelector('#touchpad');
+
+let p,b,bs,score,lives,on,id,waiting,paused;
+let soundOn=true;
+let audioCtx=null;
+let flash=null;
+
+/* ---------- 電子音 ---------- */
+
+function audio(){
+  if(!audioCtx){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  }
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function beep(freq,duration,type='square',volume=.035,endFreq=null){
+  if(!soundOn)return;
+
+  const a=audio();
+  const o=a.createOscillator();
+  const g=a.createGain();
+
+  o.type=type;
+  o.frequency.setValueAtTime(freq,a.currentTime);
+
+  if(endFreq){
+    o.frequency.exponentialRampToValueAtTime(
+      endFreq,
+      a.currentTime+duration
+    );
+  }
+
+  g.gain.setValueAtTime(volume,a.currentTime);
+  g.gain.exponentialRampToValueAtTime(
+    .0001,
+    a.currentTime+duration
+  );
+
+  o.connect(g);
+  g.connect(a.destination);
+
+  o.start();
+  o.stop(a.currentTime+duration);
+}
+
+function wallSound(){
+  beep(180,.025,'square',.012);
+}
+
+function paddleSound(){
+  beep(420,.045,'square',.025);
+}
+
+function brickSound(){
+  beep(720,.055,'square',.025);
+}
+
+function missSound(){
+  beep(190,.28,'sawtooth',.025,75);
+}
+
+function clearSound(){
+  if(!soundOn)return;
+  beep(523,.10,'square',.025);
+  setTimeout(()=>beep(659,.10,'square',.025),110);
+  setTimeout(()=>beep(784,.18,'square',.025),220);
+}
+
+/* ---------- 初期化 ---------- */
+
+function init(){
+  cancelAnimationFrame(id);
+
+  score=0;
+  lives=3;
+  on=false;
+  waiting=false;
+  paused=false;
+  flash=null;
+
+  p={
+    x:292,
+    y:465,
+    w:116,
+    h:14
+  };
+
+  b={
+    x:350,
+    y:440,
+    r:8,
+    vx:4,
+    vy:-4
+  };
+
+  bs=[];
+
+  for(let r=0;r<5;r++){
+    for(let q=0;q<8;q++){
+      bs.push({
+        x:28+q*81,
+        y:55+r*30,
+        w:74,
+        h:22,
+        a:1,
+        r
+      });
+    }
+  }
+
+  pauseBtn.textContent='一時停止';
+  sync();
+  draw('スタートを押してね');
+}
+
+function sync(){
+  S.textContent=score;
+  L.textContent=lives;
+}
+
+/* ---------- 描画 ---------- */
+
+function draw(msg=''){
+  x.clearRect(0,0,700,500);
+
+  /* 背景の薄い星 */
+  x.fillStyle='rgba(255,255,255,.035)';
+  for(let i=0;i<35;i++){
+    const sx=(i*137)%700;
+    const sy=(i*83)%430;
+    x.fillRect(sx,sy,2,2);
+  }
+
+  const cs=[
+    ['#ff7979','#d63031'],
+    ['#ffbe76','#e17055'],
+    ['#ffe66d','#d6a800'],
+    ['#7bed9f','#2eaa60'],
+    ['#70a1ff','#3867d6']
+  ];
+
+  /* ブロック */
+  for(const z of bs){
+    if(!z.a)continue;
+
+    const grad=x.createLinearGradient(
+      z.x,z.y,z.x,z.y+z.h
+    );
+
+    grad.addColorStop(0,cs[z.r][0]);
+    grad.addColorStop(1,cs[z.r][1]);
+
+    x.shadowColor=cs[z.r][0];
+    x.shadowBlur=7;
+    x.fillStyle=grad;
+
+    x.beginPath();
+    x.roundRect(z.x,z.y,z.w,z.h,4);
+    x.fill();
+
+    x.shadowBlur=0;
+
+    x.fillStyle='rgba(255,255,255,.28)';
+    x.fillRect(z.x+4,z.y+3,z.w-8,3);
+  }
+
+  /* ブロック破壊時の光 */
+  if(flash){
+    x.beginPath();
+    x.arc(flash.x,flash.y,flash.r,0,Math.PI*2);
+    x.fillStyle=`rgba(255,255,255,${flash.alpha})`;
+    x.fill();
+
+    flash.r+=3;
+    flash.alpha-=.12;
+
+    if(flash.alpha<=0)flash=null;
+  }
+
+  /* パドル */
+  const pg=x.createLinearGradient(
+    p.x,p.y,p.x,p.y+p.h
+  );
+
+  pg.addColorStop(0,'#ffffff');
+  pg.addColorStop(.45,'#bfe4ff');
+  pg.addColorStop(1,'#5689b8');
+
+  x.shadowColor='#63c7ff';
+  x.shadowBlur=12;
+  x.fillStyle=pg;
+
+  x.beginPath();
+  x.roundRect(p.x,p.y,p.w,p.h,7);
+  x.fill();
+
+  x.shadowBlur=0;
+
+  /* ボール */
+  const bg=x.createRadialGradient(
+    b.x-3,b.y-3,1,
+    b.x,b.y,b.r+3
+  );
+
+  bg.addColorStop(0,'#ffffff');
+  bg.addColorStop(.45,'#dff6ff');
+  bg.addColorStop(1,'#55bfff');
+
+  x.shadowColor='#65d5ff';
+  x.shadowBlur=14;
+
+  x.beginPath();
+  x.arc(b.x,b.y,b.r,0,Math.PI*2);
+  x.fillStyle=bg;
+  x.fill();
+
+  x.shadowBlur=0;
+
+  /* メッセージ */
+  if(msg){
+    x.fillStyle='rgba(0,0,0,.60)';
+    x.fillRect(0,205,700,90);
+
+    x.fillStyle='white';
+    x.font='bold 30px sans-serif';
+    x.textAlign='center';
+    x.shadowColor='#4d96ff';
+    x.shadowBlur=12;
+    x.fillText(msg,350,260);
+    x.shadowBlur=0;
+  }
+}
+
+/* ---------- ゲーム ---------- */
+
+function loop(){
+  if(!on)return;
+
+  b.x+=b.vx;
+  b.y+=b.vy;
+
+  /* 左右の壁 */
+  if(b.x<8){
+    b.x=8;
+    b.vx=Math.abs(b.vx);
+    wallSound();
+  }
+
+  if(b.x>692){
+    b.x=692;
+    b.vx=-Math.abs(b.vx);
+    wallSound();
+  }
+
+  /* 上の壁 */
+  if(b.y<8){
+    b.y=8;
+    b.vy=Math.abs(b.vy);
+    wallSound();
+  }
+
+  /* ミス */
+  if(b.y>508){
+    missSound();
+
+    if(--lives<=0){
+      sync();
+      on=false;
+      waiting=false;
+      draw('GAME OVER');
+      return;
+    }
+
+    b.x=350;
+    b.y=440;
+    b.vx=4*(Math.random()<.5?-1:1);
+    b.vy=-4;
+
+    sync();
+
+    on=false;
+    waiting=true;
+
+    draw('クリック / タッチで再開');
+    return;
+  }
+
+  /* パドル */
+  if(
+    b.vy>0 &&
+    b.y+8>=p.y &&
+    b.y<=p.y+14 &&
+    b.x>=p.x &&
+    b.x<=p.x+p.w
+  ){
+    let h=(b.x-(p.x+p.w/2))/(p.w/2);
+
+    b.vx=5*h;
+    b.vy=-Math.sqrt(
+      Math.max(4,32-b.vx*b.vx)
+    );
+
+    b.y=p.y-9;
+    paddleSound();
+  }
+
+  /* ブロック */
+  for(const z of bs){
+    if(
+      z.a &&
+      b.x+8>z.x &&
+      b.x-8<z.x+z.w &&
+      b.y+8>z.y &&
+      b.y-8<z.y+z.h
+    ){
+      z.a=0;
+      b.vy*=-1;
+
+      score+=10;
+      sync();
+
+      flash={
+        x:b.x,
+        y:b.y,
+        r:5,
+        alpha:.8
+      };
+
+      brickSound();
+      break;
+    }
+  }
+
+  /* クリア */
+  if(bs.every(z=>!z.a)){
+    on=false;
+    clearSound();
+    draw('CLEAR!');
+    return;
+  }
+
+  draw();
+
+  id=requestAnimationFrame(loop);
+}
+
+/* ---------- パドル移動 ---------- */
+
+function mv(cx){
+  let r=c.getBoundingClientRect();
+  let v=(cx-r.left)*700/r.width;
+
+  p.x=Math.max(
+    0,
+    Math.min(584,v-58)
+  );
+}
+
+c.onmousemove=e=>mv(e.clientX);
+
+/* ---------- PAUSE ---------- */
+
+function togglePause(){
+
+  /* ミス後の待機中 */
+  if(waiting){
+    waiting=false;
+    paused=false;
+    on=true;
+    pauseBtn.textContent='一時停止';
+    loop();
+    return;
+  }
+
+  /* ゲーム開始前・ゲーム終了後 */
+  if(!on && !paused)return;
+
+  if(on){
+    paused=true;
+    on=false;
+
+    cancelAnimationFrame(id);
+
+    pauseBtn.textContent='再開';
+    draw('PAUSE');
+
+  }else if(paused){
+
+    paused=false;
+    on=true;
+
+    pauseBtn.textContent='一時停止';
     loop();
   }
+}
+
+/* PC：ゲーム画面クリック */
+c.addEventListener('click',()=>{
+  togglePause();
+});
+
+/* iPhone：ゲーム画面タップ */
+c.addEventListener(
+  'touchstart',
+  e=>{
+    e.preventDefault();
+    togglePause();
+  },
+  {passive:false}
+);
+
+/* ---------- スマホ操作エリア ---------- */
+
+function touchMove(e){
+  e.preventDefault();
+
+  const t=e.touches[0];
+  const r=tp.getBoundingClientRect();
+
+  const ratio=Math.max(
+    0,
+    Math.min(
+      1,
+      (t.clientX-r.left)/r.width
+    )
+  );
+
+  p.x=ratio*(700-p.w);
+
+  if(!on){
+    if(paused){
+      draw('PAUSE');
+    }else if(waiting){
+      draw('クリック / タッチで再開');
+    }else{
+      draw('スタートを押してね');
+    }
+  }
+}
+
+tp.addEventListener(
+  'touchstart',
+  e=>{
+    if(waiting){
+      waiting=false;
+      on=true;
+      loop();
+    }
+
+    touchMove(e);
+  },
+  {passive:false}
+);
+
+tp.addEventListener(
+  'touchmove',
+  touchMove,
+  {passive:false}
+);
+
+/* ---------- キーボード ---------- */
+
+document.onkeydown=e=>{
+
+  if(e.key==='ArrowLeft'){
+    p.x=Math.max(0,p.x-30);
+  }
+
+  if(e.key==='ArrowRight'){
+    p.x=Math.min(584,p.x+30);
+  }
 };
+
+/* ---------- ボタン ---------- */
+
+document.querySelector('#go').onclick=()=>{
+
+  /* iPhone等で音を許可するため */
+  if(soundOn)audio();
+
+  init();
+
+  on=true;
+  loop();
+};
+
+pauseBtn.onclick=()=>{
+  togglePause();
+};
+
+soundBtn.onclick=()=>{
+
+  soundOn=!soundOn;
+
+  soundBtn.textContent=
+    soundOn ? '🔊 音ON' : '🔇 音OFF';
+
+  if(soundOn){
+    audio();
+    beep(520,.06,'square',.025);
+  }
+};
+
 init();
-</script></body></html>
+</script>
+
+</body>
+</html>
